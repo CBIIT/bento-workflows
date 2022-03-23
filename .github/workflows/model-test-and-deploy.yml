@@ -39,6 +39,10 @@ jobs:
           pip install bento-mdf/drivers/python
           pushd model-desc
           test-mdf.py --log-file validate.log $FILES
+          git config user.name github-actions
+          git add validate.log
+          git commit -m "record validation log"
+          git push
         shell: bash
   build:
     runs-on: ubuntu-latest
