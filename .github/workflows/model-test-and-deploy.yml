@@ -36,9 +36,9 @@ jobs:
           FILES: ${{ inputs.model_files }}
         run: |
           echo $PWD
-          pip install bento-mdf/validators/mdf-validate
+          pip install bento-mdf/drivers/python
           pushd model-desc
-          test-mdf.py $FILES
+          test-mdf.py --log-file validate.log $FILES
         shell: bash
   build:
     runs-on: ubuntu-latest
