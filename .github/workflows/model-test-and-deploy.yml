@@ -11,11 +11,6 @@ on:
       event_name:
         required: false
         type: string
-    secrets:
-      docker_repo:
-        required: true
-      docker_svc:
-        required: true
 
 jobs:
   validate:
@@ -35,10 +30,6 @@ jobs:
           pip install bento-mdf/drivers/python
           pushd model-desc
           test-mdf.py --log-file validate.log $FILES
-          # git config user.name github-actions
-          # git add validate.log
-          # git commit -m "record validation log"
-          # git push
         shell: bash
   build:
     runs-on: ubuntu-latest
@@ -50,8 +41,6 @@ jobs:
           submodules: 'true'
       - name: Build model artifacts
         env:
-          REPO: ${{ secrets.docker_repo }}
-          RSVC: ${{ secrets.docker_svc }}
           MODEL: ${{ inputs.model_prefix }}
           FILES: ${{ inputs.model_files }}
         run: |
@@ -59,9 +48,9 @@ jobs:
           cp -aR ../bento-mdf/drivers/Perl/make-model/lib lib
           cp -aR ../bento-mdf/drivers/Perl/make-model/bin bin
           # run model-tool with pre-built perl - fast
-          docker run -v "$PWD":/home/user -w /home/user $RSVC/$REPO/model-tool-perl:latest -Ilib bin/model-tool -g update-model.svg -T update-model.txt $FILES
+          docker run -v "$PWD":/home/user -w /home/user ghcr.io/cbiit/model-tool-perl:latest -Ilib bin/model-tool -g update-model.svg -T update-model.txt $FILES
           echo repo $(git remote get-url origin) > update-info.txt
-          # second to last commit is ours, last commit is travis'
+          # second to last commit is ours, last commit is github's
           echo commit $(git log -2 --pretty=format:"%h" | tail -1) >> update-info.txt
           cat update-info.txt
           cat update-info.txt update-model.txt > x.txt
