@@ -39,6 +39,8 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: 'true'
+      - name: Authenticate to registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
       - name: Build model artifacts
         env:
           MODEL: ${{ inputs.model_prefix }}
