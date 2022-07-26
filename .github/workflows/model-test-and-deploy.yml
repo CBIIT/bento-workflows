@@ -50,6 +50,7 @@ jobs:
           cp -aR ../bento-mdf/drivers/Perl/make-model/lib lib
           cp -aR ../bento-mdf/drivers/Perl/make-model/bin bin
           # run model-tool with pre-built perl - fast
+          docker pull ghcr.io/cbiit/model-tool-perl
           docker run -v "$PWD":/home/user -w /home/user ghcr.io/cbiit/model-tool-perl:latest -Ilib bin/model-tool -g update-model.svg -T update-model.txt $FILES
           echo repo $(git remote get-url origin) > update-info.txt
           # second to last commit is ours, last commit is github's
