@@ -27,7 +27,7 @@ jobs:
           FILES: ${{ inputs.model_files }}
         run: |
           echo $PWD
-          pip install bento-mdf/drivers/python
+          pip install bento-mdf
           pushd model-desc
           test-mdf.py --log-file validate.log $FILES
         shell: bash
