@@ -30,6 +30,9 @@ jobs:
           
         - name: Install poetry
           uses: snok/install-poetry@v1
+
+        - name: Install docker-compose
+          run: poetry run pip install docker-compose
           
         - name: Install package
           run: poetry install
