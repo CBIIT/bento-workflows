@@ -35,8 +35,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: validate
     if: ${{ inputs.event_name == 'push' }}
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: 'true'
       - name: Authenticate to registry
@@ -69,10 +71,15 @@ jobs:
           echo "</div>" >> ./README.md
           popd
       - name: Commit artifacts to docs
-        run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@ctos-data-team.org"
-          git add docs
-          git commit -m "deploy artifacts to github page"
-          git push
-        shell: bash
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "deploy artifacts to github page"
+          file_pattern: "docs/*.*"
+          skip_checkout: true
+        # run: |
+        #   git config user.name "github-actions"
+        #   git config user.email "github-actions@ctos-data-team.org"
+        #   git add docs
+        #   git commit -m "deploy artifacts to github page"
+        #   git push
+        # shell: bash
