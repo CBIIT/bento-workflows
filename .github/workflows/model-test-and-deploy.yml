@@ -36,6 +36,7 @@ jobs:
     needs: validate
     if: ${{ inputs.event_name == 'push' }}
     permissions:
+      packages: read
       contents: write
     steps:
       - uses: actions/checkout@v3
