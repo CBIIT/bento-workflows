@@ -11,7 +11,10 @@ on:
       event_name:
         required: false
         type: string
-
+      token:
+        required: true
+        type: string
+        
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -41,7 +44,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          token: ${{ secrets.PAT }}
+          token: ${{ inputs.token }}
           submodules: 'true'
       - name: Authenticate to registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
