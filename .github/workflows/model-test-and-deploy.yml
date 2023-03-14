@@ -78,7 +78,7 @@ jobs:
       - name: Commit artifacts to docs
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: "deploy artifacts to github page"
+          commit_message: "[skip ci] deploy artifacts to github page"
           file_pattern: "docs/*.*"
           skip_checkout: true
 
