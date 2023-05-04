@@ -8,6 +8,9 @@ on:
       model_prefix:
         required: true
         type: string
+      nodes_only_graph:
+        required: false
+        type: string
       event_name:
         required: false
         type: string
@@ -52,13 +55,14 @@ jobs:
         env:
           MODEL: ${{ inputs.model_prefix }}
           FILES: ${{ inputs.model_files }}
+          NODES_ONLY: ${{ inputs.graph_nodes_only }}
         run: |
           pushd model-desc
           cp -aR ../bento-mdf/drivers/Perl/make-model/lib lib
           cp -aR ../bento-mdf/drivers/Perl/make-model/bin bin
           # run model-tool with pre-built perl - fast
           docker pull ghcr.io/cbiit/model-tool-perl
-          docker run -v "$PWD":/home/user -w /home/user ghcr.io/cbiit/model-tool-perl:latest -Ilib bin/model-tool -g update-model.svg -T update-model.txt $FILES
+          docker run -v "$PWD":/home/user -w /home/user ghcr.io/cbiit/model-tool-perl:latest -Ilib bin/model-tool -g update-model.svg -n update-model-nodes-only.svg -T update-model.txt $FILES
           echo repo $(git remote get-url origin) > update-info.txt
           # second to last commit is ours, last commit is github's
           echo commit $(git log -2 --pretty=format:"%h" | tail -1) >> update-info.txt
@@ -68,11 +72,17 @@ jobs:
           cp $FILES ../docs/model-desc
           cp update-model.txt ../docs/model-desc/${MODEL}.txt
           sed -e '1,6d' update-model.svg > ../docs/model-desc/${MODEL}.svg
-          rm -f update-model.svg update-info.txt x.txt update-model.txt
+          sed -e '1,6d' update-model-nodes-only.svg > ../docs/model-desc/${MODEL}-nodes-only.svg
+          rm -f update-model.svg update-model-nodes-only.svg  update-info.txt x.txt update-model.txt
           pushd ../docs
           cat ./README.md.content > ./README.md
           echo "<div id='graph' style='display:off;'>" >> ./README.md
-          cat ./model-desc/${MODEL}.svg >> ./README.md
+          if [ -z $NODES_ONLY ]
+            then
+              cat ./model-desc/${MODEL}-nodes-only.svg >> ./README.md
+            else
+              cat ./model-desc/${MODEL}.svg >> ./README.md
+          fi
           echo "</div>" >> ./README.md
           popd
       - name: Commit artifacts to docs
