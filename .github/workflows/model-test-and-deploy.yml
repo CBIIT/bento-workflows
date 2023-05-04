@@ -55,7 +55,7 @@ jobs:
         env:
           MODEL: ${{ inputs.model_prefix }}
           FILES: ${{ inputs.model_files }}
-          NODES_ONLY: ${{ inputs.graph_nodes_only }}
+          NODES_ONLY: ${{ inputs.nodes_only_graph }}
         run: |
           pushd model-desc
           cp -aR ../bento-mdf/drivers/Perl/make-model/lib lib
