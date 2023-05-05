@@ -71,17 +71,21 @@ jobs:
           cp -f x.txt update-model.txt
           cp $FILES ../docs/model-desc
           cp update-model.txt ../docs/model-desc/${MODEL}.txt
-          sed -e '1,6d' update-model.svg > ../docs/model-desc/${MODEL}.svg
-          sed -e '1,6d' update-model-nodes-only.svg > ../docs/model-desc/${MODEL}-nodes-only.svg
+          if [ -z $NODES_ONLY ]
+            then
+              sed -e '1,6d' update-model.svg > ../docs/model-desc/${MODEL}.svg
+            else
+              sed -e '1,6d' update-model-nodes-only.svg > ../docs/model-desc/${MODEL}-nodes-only.svg
+          fi
           rm -f update-model.svg update-model-nodes-only.svg  update-info.txt x.txt update-model.txt
           pushd ../docs
           cat ./README.md.content > ./README.md
           echo "<div id='graph' style='display:off;'>" >> ./README.md
           if [ -z $NODES_ONLY ]
             then
-              cat ./model-desc/${MODEL}-nodes-only.svg >> ./README.md
-            else
               cat ./model-desc/${MODEL}.svg >> ./README.md
+            else
+              cat ./model-desc/${MODEL}-nodes-only.svg >> ./README.md
           fi
           echo "</div>" >> ./README.md
           popd
