@@ -83,8 +83,14 @@ jobs:
         - name: Install package
           run: poetry install
 
+        - name: List workspace contents before build
+          run: ls -R $GITHUB_WORKSPACE
+
         - name: Build package
-          run: poetry build
+          run: poetry build      
+
+        - name: List workspace contents after build
+          run: ls -R $GITHUB_WORKSPACE
             
         - name: Publish to TestPyPI
           uses: pypa/gh-action-pypi-publish@release/v1
