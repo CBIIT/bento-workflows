@@ -94,7 +94,7 @@ jobs:
             user: __token__
             password: ${{ secrets.TEST_PYPI_API_TOKEN }}
             repository-url: https://test.pypi.org/legacy/
-            packages-dir: drivers/python/dist
+            packages-dir: ${{ inputs.workdir }}/dist
             
         - name: Test install from TestPyPI
           run: |
@@ -108,4 +108,4 @@ jobs:
           with:
             user: __token__
             password: ${{ secrets.PYPI_API_TOKEN }}
-            packages-dir: drivers/python/dist
+            packages-dir: ${{ inputs.workdir }}/dist
