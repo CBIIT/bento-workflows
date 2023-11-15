@@ -1,0 +1,126 @@
+name: model-diff
+
+on:
+  workflow_call:
+    inputs:
+      model_handle:
+        description: "Data model handle (e.g. GDC)"
+        required: true
+        type: string
+      prev_model_files:
+        required: true
+        type: string
+      new_model_files:
+        required: true
+        type: string
+      model_directory:
+        description: "Directory containing model files"
+        required: true
+        type: string
+        default: model-desc
+      new_ref:
+        required: true
+        type: string
+      prev_ref:
+        required: true
+        type: string
+
+
+jobs:
+  create-diff-changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Python
+        id: set-up-python        
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+
+      - name: Install Poetry
+        id: install-poetry        
+        uses: snok/install-poetry@v1
+
+      - name: Install bento-meta from PyPI
+        id: install-bento-meta
+        run: |
+          pip install bento-meta
+
+      - name: Checkout Previous Commit
+        id: checkout-prev-commit        
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ inputs.prev_ref }}
+
+      - name: Save Previous Model Files
+        id: save-prev-files
+        run: |
+          mkdir -p versions/prev
+          cd ${{ inputs.model_directory }}
+          for file in ${{ inputs.new_model_files }}; do
+            cp -r $file versions/prev
+          done
+
+      - name: Checkout New Commit
+        id: checkout-new-commit
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ inputs.new_ref }}
+
+      - name: Save New Model Files
+        id: save-new-files
+        run: |
+          mkdir -p versions/new
+          cd ${{ inputs.model_directory }}
+          for file in ${{ inputs.new_model_files }}; do
+            cp -r $file versions/new
+          done
+
+      - name: Checkout bento-mdb
+        id: checkout-bento-mdb
+        uses: actions/checkout@v4
+        with:
+          repository: CBIIT/bento-mdb
+
+      - name: Open New Bento-MDB Branch
+        id: new-mdb-branch
+        run: |
+          git checkout -b "feature/no-ref/update-${{ inputs.model_handle }}"
+
+      - name: Get Model File Params
+        id: get-file-params
+        run: |
+          prev_files = ""  
+          new_files = ""
+          for file in ${{ inputs.prev_model_files }}; do
+              prev_files += "--old_mdf_files='$file' "
+          done
+          echo "::set-output name=prev_files::$prev_files"
+          for file in ${{ inputs.new_model_files }}; do
+            new_files += "--old_mdf_files='$file' "
+          done
+          echo "::set-output name=new_files::$new_files"
+      
+      - name: Format new_ref string
+        id: format-new-ref
+        run: |
+          new_ref = "${{ inputs.new_ref }}"
+          if [ ${#new_ref} -gt 7 ]; then
+            new_ref="${new_ref:0:7}"
+          fi
+          echo "::set-output name=ref::$new_ref"
+
+      - name: Create Changelog
+        id: create-changelog
+        env:
+          DIFF: "${{ inputs.model_handle }}_diff_changelog_${{ steps.format-new-ref.outputs.ref }}.xml"
+        run: |
+          poetry run python make_diff_changelog.py \
+            --model_handle=${{ inputs.model_handle }} \
+            --output_file_path="changelogs/models/${{ inputs.model_handle }}/$DIFF" \
+            --config_file_path="changelogs/changelog.ini" \
+            --author="${{ github.actor }}"
+            --_commit="${{ inputs.new_ref }}"
+            ${{ steps.get-file-params.outputs.prev_files}} \
+            ${{ steps.get-file-params.outputs.new_files}}\
