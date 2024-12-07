@@ -61,8 +61,8 @@ jobs:
           NODES_ONLY: ${{ inputs.nodes_only_graph }}
         run: |
           pushd model-desc
-          cp -aR ../bento-mdf/drivers/Perl/make-model/lib lib
-          cp -aR ../bento-mdf/drivers/Perl/make-model/bin bin
+          cp -aR ../bento-mdf/tools/make-model/lib lib
+          cp -aR ../bento-mdf/tools/make-model/bin bin
           # run model-tool with pre-built perl - fast
           docker pull ghcr.io/cbiit/model-tool-perl
           docker run -v "$PWD":/home/user -w /home/user ghcr.io/cbiit/model-tool-perl:latest -Ilib bin/model-tool -g update-model.svg -n update-model-nodes-only.svg -T update-model.txt $FILES
