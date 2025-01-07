@@ -44,6 +44,9 @@ jobs:
           uses: ndeloof/install-compose-action@v0.0.1
           with:
               legacy: true
+
+        - name: Update lock
+          run: poetry lock
           
         - name: Install package
           run: poetry install
