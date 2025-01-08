@@ -6,6 +6,9 @@ on:
       workdir:
         required: true
         type: string
+      versions:
+        required: true
+        type: 
       pkg_name:
         required: true
         type: string
@@ -25,7 +28,7 @@ jobs:
             working-directory: ${{ inputs.workdir }}
         strategy:
           matrix:
-            python-version: ${{ inputs.versions }}
+            python-version: ${{ fromJSON(inputs.versions) }}
         
         # Define job steps
         steps:
