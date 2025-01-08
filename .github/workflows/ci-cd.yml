@@ -8,7 +8,7 @@ on:
         type: string
       versions:
         required: true
-        type: 
+        type: string
       pkg_name:
         required: true
         type: string
