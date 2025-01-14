@@ -88,6 +88,9 @@ jobs:
         - name: Install poetry
           uses: snok/install-poetry@v1
           
+        - name: Update lock
+          run: poetry lock
+
         - name: Install package
           run: poetry install
 
