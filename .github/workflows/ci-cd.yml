@@ -60,6 +60,7 @@ jobs:
     cd:
         # Only run this job if the "ci" job passes
         needs: ci
+        environment: release
         permissions:
           id-token: write
         
