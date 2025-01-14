@@ -60,6 +60,8 @@ jobs:
     cd:
         # Only run this job if the "ci" job passes
         needs: ci
+        permissions:
+          id-token: write
         
         # Only run this job if new work is pushed to the "master" or "main" branch
         if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
@@ -100,8 +102,6 @@ jobs:
         - name: Publish to TestPyPI
           uses: pypa/gh-action-pypi-publish@release/v1
           with:
-            user: __token__
-            # password: ${{ secrets.TEST_PYPI_API_TOKEN }}
             repository-url: https://test.pypi.org/legacy/
             packages-dir: ${{ inputs.workdir }}/dist
             
@@ -115,6 +115,4 @@ jobs:
         - name: Publish to PyPI
           uses: pypa/gh-action-pypi-publish@release/v1
           with:
-            user: __token__
-            # password: ${{ secrets.PYPI_API_TOKEN }}
             packages-dir: ${{ inputs.workdir }}/dist
