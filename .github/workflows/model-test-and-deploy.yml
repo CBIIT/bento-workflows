@@ -38,7 +38,7 @@ jobs:
           echo $PWD
           pip install bento-mdf
           pushd model-desc
-          test-mdf.py --log-file validate.log $FILES
+          test_mdf --log-file validate.log $FILES
         shell: bash
   build:
     runs-on: ubuntu-latest
