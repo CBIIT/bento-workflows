@@ -107,6 +107,7 @@ jobs:
             password: ${{ secrets.TEST_PYPI_API_TOKEN }}
             repository-url: https://test.pypi.org/legacy/
             packages-dir: ${{ inputs.workdir }}/dist
+            verbose: true
             
         - name: Test install from TestPyPI
           run: |
@@ -121,3 +122,4 @@ jobs:
             user: __token__
             password: ${{ secrets.PYPI_API_TOKEN }}
             packages-dir: ${{ inputs.workdir }}/dist
+            verbose: true
