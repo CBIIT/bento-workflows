@@ -48,9 +48,10 @@ jobs:
       packages: read
       contents: write
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repo
+        uses: actions/checkout@v3
         with:
-          token: ${{ secrets.token }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           submodules: 'true'
       - name: Authenticate to registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
@@ -93,9 +94,11 @@ jobs:
           echo "</div>" >> ./README.md
           popd
       - name: Commit artifacts to docs
-        uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          commit_message: "[skip ci] deploy artifacts to github page"
-          file_pattern: "docs/*.*"
-          skip_checkout: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git add docs
+          git commit -m "[skip ci] deploy artifacts to github page"
+          git push
 
