@@ -17,6 +17,10 @@ on:
       event_name:
         required: false
         type: string
+      check_cdes:
+        required: false
+        type: boolean
+        default: false
     secrets:
       token:
         required: false
@@ -39,6 +43,17 @@ jobs:
           pip install bento-mdf
           pushd model-desc
           test_mdf --log-file validate.log $FILES
+        shell: bash
+      - name: Validate CDES
+        if: ${{ inputs.check_cdes }}
+        env:
+          FILES: ${{ inputs.model_files }}
+        run: |
+          echo $PWD
+          pip install bento-mdf click stamina packaging
+          pushd model-desc
+          files_array=($FILES)
+          test_mdf_cdes --output_format table "${files_array[@]/#/-f }"
         shell: bash
   build:
     runs-on: ubuntu-latest
