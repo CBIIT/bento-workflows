@@ -18,6 +18,9 @@ on:
       force-build:
         required: false
         type: string
+      secrets:
+        token:
+          required: false
 
     outputs:
       build-artifact-id:
@@ -51,6 +54,9 @@ jobs:
           uses: ndeloof/install-compose-action@v0.0.1
           with:
               legacy: true
+
+        - name: Authenticate to GitHub Packages image registry
+          run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
 
         - name: Install package
           run: uv pip install .
