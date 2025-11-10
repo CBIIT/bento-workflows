@@ -1,0 +1,123 @@
+name: test-build
+
+# use uv for install/build
+# test in one job, build in second job
+# provide build artifacts, publish via Trusted Publisher protocol
+#  in separate job (in the main repo)
+# (best practice based on https://github.com/pypa/gh-action-pypi-publish)
+
+on:
+  workflow_call:
+    inputs:
+      workdir:
+        required: true
+        type: string
+      versions:
+        required: true
+        type: string
+      # pkg_name:
+      #   required: true
+      #   type: string
+    outputs:
+      build-artifact-id:
+        description: artifact containing dist/* (the build products)
+        value: ${{ jobs.build.build-artifact-upload.outputs.artifact-id }}
+jobs:
+    test:
+        # Set up operating system
+        runs-on: ubuntu-latest
+        defaults:
+          run:
+            working-directory: ${{ inputs.workdir }}
+        strategy:
+          matrix:
+            python-version: ${{ fromJSON(inputs.versions) }}
+        
+        # Define job steps
+        steps:
+        - name: Check-out repository
+          uses: actions/checkout@v3
+
+        - name: Install the latest version of uv and set up python
+          uses: astral-sh/setup-uv@v7
+          with:
+            python-version: ${{ matrix.python-version }}
+
+        - name: Install Docker Compose
+          uses: ndeloof/install-compose-action@v0.0.1
+          with:
+              legacy: true
+
+        - name: Install package
+          run: uv pip install .
+          
+        - name: Test with pytest
+          run: uv run --frozen pytest
+
+    build:
+        # Only run this job if the "ci" job passes
+        needs: test
+        environment: release
+        permissions:
+          id-token: write
+        
+        # Only run this job if new work is pushed to the "master" or "main" branch
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
+        
+        # Set up operating system
+        runs-on: ubuntu-latest
+        defaults:
+          run:
+            working-directory: ${{ inputs.workdir }}
+        strategy:
+          matrix:
+            python-version: ["3.11"]
+            
+        # Define job steps
+        steps:
+        - name: Install the latest version of uv and set up python
+          uses: astral-sh/setup-uv@v7
+          with:
+            python-version: ${{ matrix.python-version }}
+
+        - name: Check-out repository
+          uses: actions/checkout@v3
+          with:
+            fetch-depth: 0
+
+        - name: Install package
+          run: uv pip --frozen install
+
+        - name: Build package
+          run: uv build
+            
+        - name: Upload build artifact (dist/)
+          id: build-artifact-upload
+          uses: actions/upload-artifact@v4
+          with:
+            name: test-build-dist
+            path: ./dist/
+            
+        # - name: Publish to TestPyPI
+        #   uses: pypa/gh-action-pypi-publish@76f52bc884231f62b9a034ebfe128415bbaabdfc
+        #   with:
+        #     user: __token__
+        #     password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+        #     repository-url: https://test.pypi.org/legacy/
+        #     packages-dir: ${{ inputs.workdir }}/dist
+        #     verbose: true
+            
+        # - name: Test install from TestPyPI
+        #   run: |
+        #     pip install \
+        #     --index-url https://test.pypi.org/simple/ \
+        #     --extra-index-url https://pypi.org/simple \
+        #     ${{ inputs.pkg_name }}
+            
+        # - name: Publish to PyPI
+        #   uses: pypa/gh-action-pypi-publish@76f52bc884231f62b9a034ebfe128415bbaabdfc
+        #   with:
+        #     user: __token__
+        #     password: ${{ secrets.PYPI_API_TOKEN }}
+        #     packages-dir: ${{ inputs.workdir }}/dist
+        #     verbose: true
