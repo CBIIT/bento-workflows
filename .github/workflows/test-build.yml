@@ -56,7 +56,9 @@ jobs:
               legacy: true
 
         - name: Authenticate to GitHub Packages image registry
-          run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
+          run: |
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
+            docker pull ghcr.io/cbiit/test-mdb:neo4.4
 
         - name: Install package
           run: uv pip install .
