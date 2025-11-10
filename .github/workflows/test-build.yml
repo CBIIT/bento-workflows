@@ -18,9 +18,7 @@ on:
       force-build:
         required: false
         type: string
-      # pkg_name:
-      #   required: true
-      #   type: string
+
     outputs:
       build-artifact-id:
         description: artifact containing dist/* (the build products)
@@ -46,6 +44,9 @@ jobs:
           with:
             python-version: ${{ matrix.python-version }}
 
+        - name: Create venv
+          run: uv venv
+          
         - name: Install Docker Compose
           uses: ndeloof/install-compose-action@v0.0.1
           with:
