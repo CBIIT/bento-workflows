@@ -56,10 +56,12 @@ jobs:
         - name: Install Docker Compose
           uses: ndeloof/install-compose-action@v0.0.1
 
-        - name: Authenticate to GitHub Packages image registry
-          run: |
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
-            docker pull ghcr.io/cbiit/test-mdb:neo4.4
+        # - name: Authenticate to GitHub Packages image registry
+        #   run: |
+        #     echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
+
+        - name: Pull docker image
+          run: docker pull maj1/test-mdb:neo4.4
 
         - name: Install package
           run: uv pip install .
