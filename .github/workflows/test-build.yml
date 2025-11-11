@@ -119,7 +119,7 @@ jobs:
         - name: Create venv, install, and build
           run: |
             uv venv
-            uv pip --frozen install
+            uv pip install -e .
             uv build
 
         - name: Upload build artifact (dist/)
