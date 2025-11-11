@@ -116,12 +116,12 @@ jobs:
           with:
             fetch-depth: 0
 
-        - name: Install package
-          run: uv pip --frozen install
+        - name: Create venv, install, and build
+          run: |
+            uv venv
+            uv pip --frozen install
+            uv build
 
-        - name: Build package
-          run: uv build
-            
         - name: Upload build artifact (dist/)
           id: build-artifact-upload
           uses: actions/upload-artifact@v4
