@@ -78,7 +78,7 @@ jobs:
                   timeout: 30s
                   retries: 5
             EOF
-            docker compose compose-mdb.yml -f  up -d --wait --wait-timeout 180
+            docker compose -f compose-mdb.yml  up -d --wait --wait-timeout 180
             echo Response: `curl http://localhost:7474`
             uv run --frozen pytest
 
