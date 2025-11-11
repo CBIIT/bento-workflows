@@ -50,24 +50,37 @@ jobs:
           with:
             python-version: ${{ matrix.python-version }}
 
-        - name: Create venv
-          run: uv venv
+        - name: Create venv and install 
+          run: |
+            uv venv
+            uv pip install -e .
           
-        # - name: Install Docker Compose
-        #   uses: ndeloof/install-compose-action@v0.0.1
+        - name: Authenticate to registry and pull test MDB
+          run: |
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
+            docker pull ghcr.io/cbiit/test-mdb-amd:neo4.4
 
-        # - name: Authenticate to GitHub Packages image registry
-        #   run: |
-        #     echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
-
-        # - name: Pull docker image
-        #   run: docker pull maj1/test-mdb:neo4.4
-
-        - name: Install package
-          run: uv pip install .
-          
-        - name: Test with pytest
-          run: uv run --frozen pytest
+        - name: Write compose config, start docker, run tests
+          run: |
+            cat << EOF > compose-mdb.yml
+            services:
+              test-mdb:
+                image: 'ghcr.io/cbiit/test-mdb-amd:neo4.4'
+                ports:
+                  - "7474:7474"
+                  - "7687:7687"
+                healthcheck:
+                  test:
+                    - "CMD"
+                    - "wget"
+                    - "http://localhost:7474"
+                  interval: 15s
+                  timeout: 30s
+                  retries: 5
+            EOF
+            docker compose compose-mdb.yml -f  up -d --wait --wait-timeout 180
+            echo Response: `curl http://localhost:7474`
+            uv run --frozen pytest
 
     build:
         # Only run this job if the "test" job passes
