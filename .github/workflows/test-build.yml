@@ -60,6 +60,7 @@ jobs:
             uv pip install -e .[dev]
           
         - name: Authenticate to registry and pull test MDB
+          if: ${{ !inputs.no-test-mdb }}
           run: |
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
             docker pull ghcr.io/cbiit/test-mdb-amd:neo4.4
