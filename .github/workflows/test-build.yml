@@ -47,7 +47,7 @@ jobs:
         # Define job steps
         steps:
         - name: Check-out repository
-          uses: actions/checkout@v3
+          uses: actions/checkout@v4
 
         - name: Install the latest version of uv and set up python
           uses: astral-sh/setup-uv@v7
@@ -89,9 +89,16 @@ jobs:
                    NEO4J_MDB_PASS=neo4j
             echo Response: `curl http://localhost:7474`
 
-        - name: run tests
+        - name: run tests (with coverage)
           run: |
-            uv run pytest -s -k "cicd or (not local)"
+            uv run pytest -s -k "cicd or (not local)" --cov=bento_mdf --cov-report=xml --cov-report=term-missing
+        - name: Upload coverage to Coveralls
+          uses: coverallsapp/github-action@v2
+          with:
+            github-token: ${{ secrets.GITHUB_TOKEN }}
+            flag-name: unit-tests
+            parallel: false
+          continue-on-error: true
 
     build:
         # Only run this job if the "test" job passes
@@ -121,7 +128,7 @@ jobs:
             python-version: ${{ matrix.python-version }}
 
         - name: Check-out repository
-          uses: actions/checkout@v3
+          uses: actions/checkout@v4
           with:
             fetch-depth: 0
 
