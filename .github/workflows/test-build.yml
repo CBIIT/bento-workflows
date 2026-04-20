@@ -31,44 +31,44 @@ on:
         description: artifact containing dist/* (the build products)
         value: ${{ jobs.build.build-artifact-upload.outputs.artifact-id }}
 jobs:
-    test:
+  test:
         # Set up operating system
-        runs-on: ubuntu-latest
-        permissions:
-          packages: read
-          contents: read
-        defaults:
-          run:
-            working-directory: ${{ inputs.workdir }}
-        strategy:
-          matrix:
-            python-version: ${{ fromJSON(inputs.versions) }}
+    runs-on: ubuntu-latest
+    permissions:
+      packages: read
+      contents: read
+    defaults:
+      run:
+        working-directory: ${{ inputs.workdir }}
+      strategy:
+        matrix:
+          python-version: ${{ fromJSON(inputs.versions) }}
         
-        # Define job steps
-        steps:
-        - name: Check-out repository
-          uses: actions/checkout@v4
+    # Define job steps
+    steps:
+      - name: Check-out repository
+        uses: actions/checkout@v4
 
-        - name: Install the latest version of uv and set up python
-          uses: astral-sh/setup-uv@v7
-          with:
-            python-version: ${{ matrix.python-version }}
+      - name: Install the latest version of uv and set up python
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: ${{ matrix.python-version }}
 
-        - name: Create venv and install 
-          run: |
-            uv venv
-            uv pip install -e .[dev]
+      - name: Create venv and install 
+        run: |
+          uv venv
+          uv pip install -e .[dev]
           
-        - name: Authenticate to registry and pull test MDB
-          if: ${{ !inputs.no-test-mdb }}
-          run: |
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
-            docker pull ghcr.io/cbiit/test-mdb-amd:neo4.4
+      - name: Authenticate to registry and pull test MDB
+        if: ${{ !inputs.no-test-mdb }}
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
+          docker pull ghcr.io/cbiit/test-mdb-amd:neo4.4
 
-        - name: Write compose config, start docker
-          if: ${{ !inputs.no-test-mdb }}
-          run: |
-            cat << EOF > compose-mdb.yml
+      - name: Write compose config, start docker
+        if: ${{ !inputs.no-test-mdb }}
+        run: |
+          cat << EOF > compose-mdb.yml
             services:
               test-mdb:
                 image: 'ghcr.io/cbiit/test-mdb-amd:neo4.4'
@@ -89,39 +89,40 @@ jobs:
                    NEO4J_MDB_PASS=neo4j
             echo Response: `curl http://localhost:7474`
 
-        - name: run tests (with coverage)
-          run: |
-            uv run pytest -s -k "cicd or (not local)" --cov=bento_mdf --cov-report=xml --cov-report=term-missing
-        - name: Upload coverage to Coveralls
-          uses: coverallsapp/github-action@v2
-          with:
-            github-token: ${{ secrets.GITHUB_TOKEN }}
-            flag-name: unit-tests
-            parallel: false
-          continue-on-error: true
+      - name: run tests (with coverage)
+        run: |
+          uv run pytest -s -k "cicd or (not local)" --cov=bento_mdf --cov-report=xml --cov-report=term-missing
+
+      - name: Upload coverage to Coveralls
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          flag-name: unit-tests
+          parallel: false
+        continue-on-error: true
 
     build:
-        # Only run this job if the "test" job passes
-        needs: test
-        environment: release
-        permissions:
-          id-token: write
+      # Only run this job if the "test" job passes
+      needs: test
+      environment: release
+      permissions:
+        id-token: write
         
-        # Only run this job if new work is pushed to the "master" or "main" branch
-        # or if force-build is set
-        if: ${{ inputs.force-build != '' }} || (github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'))
+      # Only run this job if new work is pushed to the "master" or "main" branch
+      # or if force-build is set
+      if: ${{ inputs.force-build != '' }} || (github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'))
         
-        # Set up operating system
-        runs-on: ubuntu-latest
-        defaults:
-          run:
-            working-directory: ${{ inputs.workdir }}
-        strategy:
-          matrix:
-            python-version: ["3.11"]
+      # Set up operating system
+      runs-on: ubuntu-latest
+      defaults:
+        run:
+          working-directory: ${{ inputs.workdir }}
+      strategy:
+        matrix:
+          python-version: ["3.11"]
             
-        # Define job steps
-        steps:
+      # Define job steps
+      steps:
         - name: Install the latest version of uv and set up python
           uses: astral-sh/setup-uv@v7
           with:
@@ -145,26 +146,26 @@ jobs:
             name: test-build-dist
             path: ./dist/
             
-        # - name: Publish to TestPyPI
-        #   uses: pypa/gh-action-pypi-publish@76f52bc884231f62b9a034ebfe128415bbaabdfc
-        #   with:
-        #     user: __token__
-        #     password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-        #     repository-url: https://test.pypi.org/legacy/
-        #     packages-dir: ${{ inputs.workdir }}/dist
-        #     verbose: true
+      # - name: Publish to TestPyPI
+      #   uses: pypa/gh-action-pypi-publish@76f52bc884231f62b9a034ebfe128415bbaabdfc
+      #   with:
+      #     user: __token__
+      #     password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+      #     repository-url: https://test.pypi.org/legacy/
+      #     packages-dir: ${{ inputs.workdir }}/dist
+      #     verbose: true
             
-        # - name: Test install from TestPyPI
-        #   run: |
-        #     pip install \
-        #     --index-url https://test.pypi.org/simple/ \
-        #     --extra-index-url https://pypi.org/simple \
-        #     ${{ inputs.pkg_name }}
+      # - name: Test install from TestPyPI
+      #   run: |
+      #     pip install \
+      #     --index-url https://test.pypi.org/simple/ \
+      #     --extra-index-url https://pypi.org/simple \
+      #     ${{ inputs.pkg_name }}
             
-        # - name: Publish to PyPI
-        #   uses: pypa/gh-action-pypi-publish@76f52bc884231f62b9a034ebfe128415bbaabdfc
-        #   with:
-        #     user: __token__
-        #     password: ${{ secrets.PYPI_API_TOKEN }}
-        #     packages-dir: ${{ inputs.workdir }}/dist
-        #     verbose: true
+      # - name: Publish to PyPI
+      #   uses: pypa/gh-action-pypi-publish@76f52bc884231f62b9a034ebfe128415bbaabdfc
+      #   with:
+      #     user: __token__
+      #     password: ${{ secrets.PYPI_API_TOKEN }}
+      #     packages-dir: ${{ inputs.workdir }}/dist
+      #     verbose: true
