@@ -15,9 +15,9 @@ on:
       versions:
         required: true
         type: string
-      force-build:
+      do-build:
         required: false
-        type: string
+        type: boolean
       no-test-mdb:
         required: false
         type: boolean
@@ -29,7 +29,7 @@ on:
     outputs:
       build-artifact-id:
         description: artifact containing dist/* (the build products)
-        value: ${{ jobs.build.build-artifact-upload.outputs.artifact-id }}
+        value: ${{ jobs.build.outputs.artifact-id }}
 jobs:
   test:
         # Set up operating system
@@ -101,71 +101,72 @@ jobs:
           parallel: false
         continue-on-error: true
 
-    build:
-      # Only run this job if the "test" job passes
-      needs: test
-      environment: release
-      permissions:
-        id-token: write
+  build:
+    # Only run this job if the "test" job passes
+    needs: test
+    environment: release
+    permissions:
+      id-token: write
+    outputs:
+      artifact-id: ${{ steps.build-artifact-upload.outputs.artifact-id }}
+      
+    # Run build only when 'do-build' is set
+    if: ${{ inputs.do-build }}
         
-      # Only run this job if new work is pushed to the "master" or "main" branch
-      # or if force-build is set
-      if: ${{ inputs.force-build != '' }} || (github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'))
-        
-      # Set up operating system
-      runs-on: ubuntu-latest
-      defaults:
-        run:
-          working-directory: ${{ inputs.workdir }}
+    # Set up operating system
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.workdir }}
       strategy:
         matrix:
           python-version: ["3.11"]
             
       # Define job steps
-      steps:
-        - name: Install the latest version of uv and set up python
-          uses: astral-sh/setup-uv@v7
-          with:
-            python-version: ${{ matrix.python-version }}
+    steps:
+      - name: Install the latest version of uv and set up python
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: ${{ matrix.python-version }}
 
-        - name: Check-out repository
-          uses: actions/checkout@v4
-          with:
-            fetch-depth: 0
+      - name: Check-out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-        - name: Create venv, install, and build
-          run: |
-            uv venv
-            uv pip install -e .
-            uv build
+      - name: Create venv, install, and build
+        run: |
+          uv venv
+          uv pip install -e .
+          uv build
 
-        - name: Upload build artifact (dist/)
-          id: build-artifact-upload
-          uses: actions/upload-artifact@v4
-          with:
-            name: test-build-dist
-            path: ./dist/
+      - name: Upload build artifact (dist/)
+        id: build-artifact-upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-build-dist
+          path: ./dist/
             
-      # - name: Publish to TestPyPI
-      #   uses: pypa/gh-action-pypi-publish@76f52bc884231f62b9a034ebfe128415bbaabdfc
-      #   with:
-      #     user: __token__
-      #     password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-      #     repository-url: https://test.pypi.org/legacy/
-      #     packages-dir: ${{ inputs.workdir }}/dist
-      #     verbose: true
+    # - name: Publish to TestPyPI
+    #   uses: pypa/gh-action-pypi-publish@76f52bc884231f62b9a034ebfe128415bbaabdfc
+    #   with:
+    #     user: __token__
+    #     password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+    #     repository-url: https://test.pypi.org/legacy/
+    #     packages-dir: ${{ inputs.workdir }}/dist
+    #     verbose: true
             
-      # - name: Test install from TestPyPI
-      #   run: |
-      #     pip install \
-      #     --index-url https://test.pypi.org/simple/ \
-      #     --extra-index-url https://pypi.org/simple \
-      #     ${{ inputs.pkg_name }}
+    # - name: Test install from TestPyPI
+    #   run: |
+    #     pip install \
+    #     --index-url https://test.pypi.org/simple/ \
+    #     --extra-index-url https://pypi.org/simple \
+    #     ${{ inputs.pkg_name }}
             
-      # - name: Publish to PyPI
-      #   uses: pypa/gh-action-pypi-publish@76f52bc884231f62b9a034ebfe128415bbaabdfc
-      #   with:
-      #     user: __token__
-      #     password: ${{ secrets.PYPI_API_TOKEN }}
-      #     packages-dir: ${{ inputs.workdir }}/dist
-      #     verbose: true
+    # - name: Publish to PyPI
+    #   uses: pypa/gh-action-pypi-publish@76f52bc884231f62b9a034ebfe128415bbaabdfc
+    #   with:
+    #     user: __token__
+    #     password: ${{ secrets.PYPI_API_TOKEN }}
+    #     packages-dir: ${{ inputs.workdir }}/dist
+    #     verbose: true
