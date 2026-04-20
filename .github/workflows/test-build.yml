@@ -118,9 +118,9 @@ jobs:
     defaults:
       run:
         working-directory: ${{ inputs.workdir }}
-      strategy:
-        matrix:
-          python-version: ["3.11"]
+    strategy:
+      matrix:
+        python-version: ["3.11"]
             
       # Define job steps
     steps:
