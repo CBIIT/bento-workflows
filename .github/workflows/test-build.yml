@@ -40,9 +40,9 @@ jobs:
     defaults:
       run:
         working-directory: ${{ inputs.workdir }}
-      strategy:
-        matrix:
-          python-version: ${{ fromJSON(inputs.versions) }}
+    strategy:
+      matrix:
+        python-version: ${{ fromJSON(inputs.versions) }}
         
     # Define job steps
     steps:
