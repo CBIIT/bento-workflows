@@ -18,6 +18,7 @@ on:
       do-build:
         required: false
         type: boolean
+        default: false
       no-test-mdb:
         required: false
         type: boolean
@@ -29,7 +30,7 @@ on:
         value: ${{ jobs.build.outputs.artifact-id }}
 jobs:
   test:
-        # Set up operating system
+    # Set up operating system
     runs-on: ubuntu-latest
     permissions:
       packages: read
@@ -82,8 +83,9 @@ jobs:
                   retries: 5
           EOF
           docker compose -f compose-mdb.yml  up -d --wait --wait-timeout 180
-          export NEO4J_MDB_URI=bolt://localhost:7687 NEO4J_MDB_USER=neo4j1 \
-                 NEO4J_MDB_PASS=neo4j
+          echo "NEO4J_MDB_URI=bolt://localhost:7687" >> "$GITHUB_ENV"
+          echo "NEO4J_MDB_USER=neo4j1" >> "$GITHUB_ENV"
+          echo "NEO4J_MDB_PASS=neo4j" >> "$GITHUB_ENV"
           echo Response: `curl http://localhost:7474`
 
       - name: run tests (with coverage)
